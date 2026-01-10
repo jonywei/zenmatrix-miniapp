@@ -1,0 +1,42 @@
+<template>
+	<scroll-view class="page" scroll-y="true">
+		<view class="info-card">
+			<view class="row-between"><text class="name">{{ contact['name'] }}</text><text class="id">ID: {{ contact['id'] }}</text></view>
+			<view class="row-item mt-2" @click="callPhone"><text class="label">电话</text><text class="val link">{{ contact['phone'] || '无' }} 📞</text></view>
+			<view class="row-item"><text class="label">地址</text><text class="val">{{ contact['address'] || '无' }}</text></view>
+			<view class="balance-box"><text class="balance-label">当前余额</text><text class="balance-val" :class="isDebt ? 'text-red' : 'text-green'">{{ isDebt ? '欠我' : '欠他' }} ¥ {{ formatNum(balanceAbs) }}</text></view>
+		</view>
+		<view class="section-title">交易流水</view>
+		<view class="list-box">
+			<view v-for="(h, index) in (history as any[])" :key="index" class="list-item">
+				<view class="item-header"><text class="h-type">{{ h['type'] }}</text><text class="h-amount" :class="isIncome(h['type']) ? 'text-green' : 'text-black'">¥ {{ formatNum(h['amount']) }}</text></view>
+				<view class="item-body"><text class="h-product">商品: {{ h['product'] }}</text><text class="h-remark" v-if="h['remark']">备注: {{ h['remark'] }}</text></view>
+				<text class="h-date">{{ h['date'] }}</text>
+			</view>
+			<view v-if="(history as any[]).length == 0" class="empty-tip"><text class="empty-text">暂无交易记录</text></view>
+		</view>
+	</scroll-view>
+</template>
+<script>
+	import { request } from '@/common/api.js';
+	export default {
+		data() { return { id: '', contact: {} as any, history: [] as any[] } },
+		computed: { balanceAbs(): number { let b = parseFloat(this.contact['balance'] || '0'); return Math.abs(b); }, isDebt(): boolean { let b = parseFloat(this.contact['balance'] || '0'); return b > 0; } },
+		onLoad(options: any) { if(options['id']) { this.id = options['id']; this.loadData(); } },
+		methods: {
+			async loadData() { try { const resC = await request({ url: `/api/contacts/${this.id}/` }); if(resC) this.contact = resC; const resH = await request({ url: `/api/contacts/${this.id}/history/` }); if(resH) this.history = resH as any[]; } catch(e) {} },
+			isIncome(type: string): boolean { return type.includes('收入') || type.includes('收款'); },
+			formatNum(num: any): string { return parseFloat(num || 0).toLocaleString('zh-CN', {minimumFractionDigits: 2}); },
+			callPhone() { if(this.contact['phone']) { uni.makePhoneCall({ phoneNumber: this.contact['phone'] }); } }
+		}
+	}
+</script>
+<style>
+	.page { padding: 20rpx; background-color: #f5f7fa; height: 100%; }
+	.info-card { background-color: #fff; border-radius: 20rpx; padding: 30rpx; margin-bottom: 30rpx; } .row-between { flex-direction: row; justify-content: space-between; align-items: center; } .name { font-size: 36rpx; font-weight: bold; color: #333; } .id { font-size: 24rpx; color: #999; }
+	.row-item { flex-direction: row; margin-top: 16rpx; } .label { font-size: 26rpx; color: #666; width: 100rpx; } .val { font-size: 26rpx; color: #333; font-weight: bold; } .link { color: #2563eb; }
+	.balance-box { margin-top: 30rpx; border-top-width: 1px; border-top-color: #eee; border-top-style: solid; padding-top: 20rpx; flex-direction: row; justify-content: space-between; align-items: center; } .balance-label { font-size: 26rpx; color: #666; } .balance-val { font-size: 36rpx; font-weight: 900; } .text-red { color: #ef4444; } .text-green { color: #10b981; } .text-black { color: #333; }
+	.section-title { font-size: 28rpx; font-weight: bold; color: #666; margin-bottom: 20rpx; margin-left: 10rpx; } .list-box { background-color: #fff; border-radius: 20rpx; padding: 0 24rpx; } .list-item { padding: 24rpx 0; border-bottom-width: 1px; border-bottom-color: #f3f4f6; border-bottom-style: solid; } .item-header { flex-direction: row; justify-content: space-between; margin-bottom: 10rpx; } .h-type { font-size: 28rpx; font-weight: bold; color: #333; } .h-amount { font-size: 30rpx; font-weight: bold; }
+	.item-body { margin-bottom: 10rpx; } .h-product { font-size: 24rpx; color: #666; margin-bottom: 4rpx; } .h-remark { font-size: 22rpx; color: #999; background-color: #f9fafb; padding: 4rpx 8rpx; border-radius: 6rpx; align-self: flex-start; } .h-date { font-size: 20rpx; color: #ccc; text-align: right; }
+	.empty-tip { padding: 40rpx; align-items: center; } .empty-text { font-size: 24rpx; color: #ccc; }
+</style>

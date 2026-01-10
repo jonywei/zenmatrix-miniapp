@@ -1,0 +1,89 @@
+<template>
+	<scroll-view class="page" scroll-y="true">
+		
+		<view class="hero-card">
+			<text class="hero-title">本月战绩 ({{ currentMonth }})</text>
+			<view class="hero-main">
+				<text class="currency">¥</text>
+				<text class="amount">{{ formatNum(data['today_sale']) }}</text>
+			</view>
+			<text class="hero-sub">本月累计销售额</text>
+		</view>
+
+		<view class="grid-box">
+			<view class="grid-item">
+				<text class="grid-label">净毛利 (预估)</text>
+				<text class="grid-val text-gold">¥ {{ formatNum(data['stock_value'] * 0.2) }}</text>
+				</view>
+			<view class="grid-item">
+				<text class="grid-label">成交单数</text>
+				<text class="grid-val text-black">{{ data['today_entry'] }} 单</text>
+			</view>
+		</view>
+		
+		<view class="motivation-box">
+			<text class="motivation-text">🌟 只有淡季的思想，没有淡季的市场！</text>
+		</view>
+		
+	</scroll-view>
+</template>
+
+<script>
+	import { request } from '@/common/api.js';
+
+	export default {
+		data() {
+			return {
+				// 复用 Dashboard 数据结构
+				data: { stock_value: 0, today_sale: 0, today_entry: 0 } as any,
+				currentMonth: ''
+			}
+		},
+		onLoad() {
+			let now = new Date();
+			this.currentMonth = `${now.getFullYear()}年${now.getMonth() + 1}月`;
+			this.loadData();
+		},
+		methods: {
+			async loadData() {
+				try {
+					// 这里暂时调用 dashboard 接口作为演示
+					// 实际开发中，后端应提供 /api/profile/performance/ 
+					const res = await request({ url: '/api/analysis/dashboard/' });
+					if(res) this.data = res;
+				} catch(e) {}
+			},
+			formatNum(num: any): string {
+				return parseFloat(num || 0).toLocaleString('zh-CN', {minimumFractionDigits: 2});
+			}
+		}
+	}
+</script>
+
+<style>
+	.page { padding: 30rpx; background-color: #f8faff; height: 100%; box-sizing: border-box; }
+	
+	.hero-card {
+		background-image: linear-gradient(135deg, #2563eb, #1e40af);
+		border-radius: 24rpx; padding: 60rpx 40rpx; margin-bottom: 30rpx;
+		align-items: center; box-shadow: 0 10rpx 30rpx rgba(37,99,235,0.3);
+	}
+	.hero-title { font-size: 28rpx; color: #93c5fd; margin-bottom: 20rpx; }
+	.hero-main { flex-direction: row; align-items: baseline; margin-bottom: 10rpx; }
+	.currency { font-size: 40rpx; color: #fff; font-weight: bold; margin-right: 10rpx; }
+	.amount { font-size: 80rpx; color: #fff; font-weight: 900; letter-spacing: -2rpx; }
+	.hero-sub { font-size: 24rpx; color: #bfdbfe; opacity: 0.8; }
+	
+	.grid-box { flex-direction: row; justify-content: space-between; margin-bottom: 40rpx; }
+	.grid-item { 
+		width: 48%; background-color: #fff; border-radius: 20rpx; padding: 30rpx; 
+		box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.02);
+	}
+	.grid-label { font-size: 26rpx; color: #64748b; margin-bottom: 12rpx; }
+	.grid-val { font-size: 36rpx; font-weight: bold; }
+	.text-gold { color: #ca8a04; }
+	.text-black { color: #1e293b; }
+	
+	.motivation-box { background-color: #fffbeb; padding: 30rpx; border-radius: 16rpx; border: 1px solid #fcd34d; align-items: center; }
+	.motivation-text { font-size: 28rpx; color: #b45309; font-weight: bold; }
+</style>

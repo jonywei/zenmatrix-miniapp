@@ -1,0 +1,42 @@
+<template>
+	<scroll-view class="page" scroll-y="true">
+		<view class="filter-card">
+			<view class="row-between mb-3"><text class="label">统计时间段</text><view class="date-row"><picker mode="date" :value="startDate" @change="onStartChange"><view class="date-btn">{{ startDate }}</view></picker><text class="split">-</text><picker mode="date" :value="endDate" @change="onEndChange"><view class="date-btn">{{ endDate }}</view></picker></view></view>
+			<view class="row-between"><text class="label">销售人员</text><picker mode="selector" :range="staffNames" @change="onStaffChange"><view class="picker-simple"><text>{{ currentStaffName }}</text><text class="arrow">▼</text></view></picker></view>
+			<button class="btn-search" @click="loadData">查询</button>
+		</view>
+		<view class="grid-3">
+			<view class="data-item border-blue"><text class="data-label text-blue">销售额</text><text class="data-val">¥{{ formatNum(summary['sales']) }}</text></view>
+			<view class="data-item border-gray"><text class="data-label text-gray">总成本</text><text class="data-val">¥{{ formatNum(summary['cost']) }}</text></view>
+			<view class="data-item border-yellow"><text class="data-label text-yellow">净毛利</text><text class="data-val">¥{{ formatNum(summary['profit']) }}</text></view>
+		</view>
+		<view class="section-title"><text class="title-text">明细清单 ({{ summary['count'] }}单)</text></view>
+		<view class="list-box">
+			<view v-for="(item, index) in (list as any[])" :key="index" class="list-item">
+				<view class="row-between mb-1"><text class="p-name">{{ item['product_name'] }}</text><text class="p-sales">¥{{ formatNum(item['sales']) }}</text></view>
+				<view class="row-between"><view class="tags"><text class="tag-code">{{ item['zencode'] }}</text><text class="text-date">{{ item['date'] }}</text></view><text class="p-profit" :class="isPositive(item['profit']) ? 'text-green' : 'text-red'">赚: ¥{{ formatNum(item['profit']) }}</text></view>
+				<view class="row-footer" v-if="item['staff'] != '-' || item['customer'] != '-'"><text class="tag-meta" v-if="item['staff'] != '-'">销: {{ item['staff'] }}</text><text class="tag-meta" v-if="item['customer'] != '-'">客: {{ item['customer'] }}</text></view>
+			</view>
+			<view v-if="(list as any[]).length == 0" class="empty-tip"><text class="empty-text">暂无销售记录</text></view>
+		</view>
+	</scroll-view>
+</template>
+<script>
+	import { request } from '@/common/api.js';
+	export default {
+		data() { return { startDate: '', endDate: '', staffId: '', staffList: [], staffNames: ['全部员工'], currentStaffName: '全部', summary: { sales: 0, cost: 0, profit: 0, count: 0 } as any, list: [] } },
+		onLoad() { let now = new Date(); let y = now.getFullYear(); let m = now.getMonth() + 1; let d = now.getDate(); this.endDate = `${y}-${m < 10 ? '0'+m : m}-${d < 10 ? '0'+d : d}`; this.startDate = `${y}-${m < 10 ? '0'+m : m}-01`; this.loadData(); },
+		methods: { async loadData() { try { let url = `/api/analysis/profit_dashboard/?start_date=${this.startDate}&end_date=${this.endDate}`; if(this.staffId) url += `&staff_id=${this.staffId}`; const res = await request({ url: url }); if(res) { this.summary = (res as any)['summary']; this.list = (res as any)['list']; let opts = (res as any)['options'] as any; if(opts && opts['staff']) { this.staffList = opts['staff']; this.staffNames = ['全部员工']; this.staffNames.push(...this.staffList.map((s: any): string => s['name'])); } } } catch(e) {} }, onStartChange(e: any) { this.startDate = e.detail.value; }, onEndChange(e: any) { this.endDate = e.detail.value; }, onStaffChange(e: any) { let index = e.detail.value as number; if(index == 0) { this.staffId = ''; this.currentStaffName = '全部'; } else { let s = this.staffList[index - 1]; this.staffId = s['id']; this.currentStaffName = s['name']; } }, formatNum(num: any): string { return parseFloat(num || 0).toLocaleString(); }, isPositive(num: any): boolean { return parseFloat(num || 0) >= 0; } }
+	}
+</script>
+<style>
+	.page { padding: 20rpx; background-color: #f8faff; height: 100%; }
+	.filter-card { background-color: #fff; padding: 30rpx; border-radius: 24rpx; margin-bottom: 30rpx; } .row-between { flex-direction: row; justify-content: space-between; align-items: center; } .mb-3 { margin-bottom: 24rpx; } .label { font-size: 28rpx; color: #64748b; font-weight: bold; }
+	.date-row { flex-direction: row; align-items: center; } .date-btn { background-color: #f1f5f9; padding: 12rpx 24rpx; border-radius: 12rpx; font-size: 28rpx; color: #333; } .split { margin: 0 10rpx; color: #ccc; }
+	.picker-simple { flex-direction: row; align-items: center; } .arrow { color: #ccc; font-size: 24rpx; margin-left: 10rpx; } .btn-search { background-color: #2563eb; color: #fff; height: 80rpx; line-height: 80rpx; font-size: 30rpx; font-weight: bold; border-radius: 16rpx; margin-top: 30rpx; }
+	.grid-3 { flex-direction: row; justify-content: space-between; gap: 20rpx; margin-bottom: 40rpx; } .data-item { flex: 1; background-color: #fff; padding: 24rpx; border-radius: 20rpx; align-items: center; border-top-width: 6rpx; border-top-style: solid; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.02); } .border-blue { border-top-color: #3b82f6; } .border-gray { border-top-color: #94a3b8; } .border-yellow { border-top-color: #eab308; }
+	.data-label { font-size: 24rpx; margin-bottom: 10rpx; } .text-blue { color: #3b82f6; } .text-gray { color: #64748b; } .text-yellow { color: #ca8a04; } .data-val { font-size: 32rpx; font-weight: bold; color: #333; }
+	.section-title { margin-bottom: 20rpx; padding-left: 10rpx; } .title-text { font-size: 28rpx; font-weight: bold; color: #475569; }
+	.list-box { background-color: #fff; border-radius: 24rpx; padding: 0 24rpx; } .list-item { padding: 24rpx 0; border-bottom-width: 1px; border-bottom-color: #f1f5f9; border-bottom-style: solid; } .mb-1 { margin-bottom: 8rpx; }
+	.p-name { font-size: 30rpx; font-weight: bold; color: #333; } .p-sales { font-size: 30rpx; font-weight: bold; color: #2563eb; } .tags { flex-direction: row; align-items: center; } .tag-code { background-color: #f1f5f9; font-size: 22rpx; color: #64748b; padding: 2rpx 8rpx; border-radius: 6rpx; margin-right: 10rpx; } .text-date { font-size: 22rpx; color: #94a3b8; } .p-profit { font-size: 26rpx; font-weight: bold; } .text-green { color: #10b981; } .text-red { color: #ef4444; } .row-footer { flex-direction: row; justify-content: flex-end; margin-top: 10rpx; gap: 10rpx; } .tag-meta { font-size: 20rpx; background-color: #eff6ff; color: #2563eb; padding: 2rpx 8rpx; border-radius: 6rpx; } .empty-tip { padding: 60rpx; align-items: center; } .empty-text { font-size: 24rpx; color: #ccc; }
+</style>

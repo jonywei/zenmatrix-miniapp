@@ -1,0 +1,78 @@
+{
+	"pages": [
+		{
+			"path": "pages/login/login",
+			"style": { "navigationBarTitleText": "登录系统", "navigationStyle": "custom" }
+		},
+		{
+			"path": "pages/index/index",
+			"style": { "navigationBarTitleText": "ZenMatrix 工作台", "enablePullDownRefresh": true }
+		},
+		{
+			"path": "pages/entry/add",
+			"style": { "navigationBarTitleText": "极速入库" }
+		},
+		{
+			"path": "pages/sales/add",
+			"style": { "navigationBarTitleText": "销售开单" }
+		},
+		{
+			"path": "pages/contact/list",
+			"style": { "navigationBarTitleText": "客户档案" }
+		},
+		{
+			"path": "pages/contact/detail",
+			"style": { "navigationBarTitleText": "客户详情" }
+		},
+		{
+			"path": "pages/inventory/list",
+			"style": { "navigationBarTitleText": "库存清单" }
+		},
+		{
+			"path": "pages/inventory/detail",
+			"style": { "navigationBarTitleText": "商品详情" }
+		},
+		{
+			"path": "pages/rental/list",
+			"style": { "navigationBarTitleText": "租赁管理" }
+		},
+		{
+			"path": "pages/rental/create",
+			"style": { "navigationBarTitleText": "租赁开单" }
+		},
+		{
+			"path": "pages/account/list",
+			"style": { "navigationBarTitleText": "资金账户" }
+		},
+		{
+			"path": "pages/account/detail",
+			"style": { "navigationBarTitleText": "账户流水" }
+		},
+		{
+			"path": "pages/analysis/profit",
+			"style": { "navigationBarTitleText": "利润分析" }
+		},
+		{
+			"path": "pages/analysis/finance",
+			"style": { "navigationBarTitleText": "财务往来" }
+		},
+		{
+			"path": "pages/profile/index",
+			"style": { "navigationBarTitleText": "个人中心" }
+		},
+		{
+					"path": "pages/profile/performance",
+					"style": { "navigationBarTitleText": "我的业绩战报" }
+				},
+				{
+					"path": "pages/profile/password",
+					"style": { "navigationBarTitleText": "安全中心" }
+				}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "ZenMatrix",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"backgroundColor": "#F8F8F8"
+	}
+}

@@ -1,0 +1,36 @@
+<template>
+	<scroll-view class="page" scroll-y="true">
+		<image :src="product['image'] || '/static/logo.png'" mode="aspectFill" class="hero-img"></image>
+		<view class="card">
+			<view class="row-between"><text class="price">¥ {{ product['cost_price'] }}</text><text class="status">在库</text></view>
+			<text class="name">{{ product['name'] }}</text><text class="code">编码: {{ product['zencode'] }}</text>
+		</view>
+		<view class="card mt-2">
+			<text class="section-title">详细配置</text>
+			<view class="param-row"><text class="label">CPU</text><text class="val">{{ product['cpu'] || '-' }}</text></view>
+			<view class="param-row"><text class="label">显卡</text><text class="val">{{ product['gpu'] || '-' }}</text></view>
+			<view class="param-row"><text class="label">内存</text><text class="val">{{ product['ram'] || '-' }}</text></view>
+			<view class="param-row"><text class="label">硬盘</text><text class="val">{{ product['disk'] || '-' }}</text></view>
+			<view class="param-row"><text class="label">备注</text><text class="val">{{ product['note'] || '-' }}</text></view>
+		</view>
+		<view class="card mt-2">
+			<text class="section-title">价格管理</text>
+			<view class="param-row"><text class="label">同行底价</text><text class="val">¥ {{ product['peer_price'] || '-' }}</text></view>
+			<view class="param-row"><text class="label">零售指导</text><text class="val">¥ {{ product['retail_price'] || '-' }}</text></view>
+		</view>
+	</scroll-view>
+</template>
+<script>
+	import { request } from '@/common/api.js';
+	export default {
+		data() { return { id: '', product: {} as any } },
+		onLoad(options: any) { this.id = options['id']; this.loadData(); },
+		methods: { async loadData() { try { const res = await request({ url: `/api/products/${this.id}/` }); if(res) this.product = res; } catch(e) {} } }
+	}
+</script>
+<style>
+	.page { background-color: #f5f7fa; height: 100%; padding-bottom: 40rpx; }
+	.hero-img { width: 100%; height: 500rpx; background-color: #eee; } .card { background-color: #fff; padding: 30rpx; margin-bottom: 20rpx; } .mt-2 { margin-top: 20rpx; }
+	.row-between { flex-direction: row; justify-content: space-between; align-items: center; margin-bottom: 10rpx; } .price { font-size: 48rpx; color: #ef4444; font-weight: 900; } .status { font-size: 24rpx; color: #10b981; background-color: #ecfdf5; padding: 4rpx 12rpx; border-radius: 8rpx; } .name { font-size: 32rpx; font-weight: bold; color: #333; margin-bottom: 10rpx; } .code { font-size: 24rpx; color: #999; background-color: #f3f4f6; padding: 4rpx 10rpx; border-radius: 8rpx; align-self: flex-start; }
+	.section-title { font-size: 28rpx; font-weight: bold; margin-bottom: 20rpx; border-left-width: 6rpx; border-left-color: #2563eb; border-left-style: solid; padding-left: 16rpx; } .param-row { flex-direction: row; margin-bottom: 16rpx; border-bottom-width: 1px; border-bottom-color: #f9fafb; border-bottom-style: solid; padding-bottom: 16rpx; } .label { width: 140rpx; font-size: 26rpx; color: #999; } .val { flex: 1; font-size: 26rpx; color: #333; }
+</style>

@@ -1,0 +1,210 @@
+<template>
+	<scroll-view class="page" scroll-y="true">
+		
+		<view class="form-card">
+			<view class="card-header-line">
+				<view class="blue-bar"></view>
+				<text class="header-text">基本信息</text>
+			</view>
+			
+			<view class="grid-container">
+				<view class="grid-cell">
+					<text class="field-label">选择客户 <text class="req">*</text></text>
+					<picker mode="selector" :range="contactNames" @change="onContactChange" class="picker-full">
+						<view class="input-box picker-layout">
+							<text class="input-val" :class="form['contact_id']?'text-dark':'text-light'">{{ currentContactName }}</text>
+							<text class="icon-arrow">▼</text>
+						</view>
+					</picker>
+				</view>
+				
+				<view class="grid-cell">
+					<text class="field-label">选择设备 <text class="req">*</text></text>
+					<picker mode="selector" :range="productNames" @change="onProductChange" class="picker-full">
+						<view class="input-box picker-layout">
+							<text class="input-val" :class="form['product_id']?'text-dark':'text-light'">{{ currentProductName }}</text>
+							<text class="icon-arrow">▼</text>
+						</view>
+					</picker>
+				</view>
+			</view>
+		</view>
+
+		<view class="form-card">
+			<view class="card-header-line">
+				<view class="purple-bar"></view>
+				<text class="header-text">费用方案</text>
+			</view>
+			
+			<view class="grid-container">
+				<view class="grid-cell">
+					<text class="field-label">押金 (¥)</text>
+					<input class="input-box font-bold" type="digit" v-model="form['deposit']" placeholder="0" />
+				</view>
+				<view class="grid-cell">
+					<text class="field-label">租金单价 (¥)</text>
+					<input class="input-box font-bold text-purple" type="digit" v-model="form['rent_price']" placeholder="0" />
+				</view>
+			</view>
+			
+			<view class="grid-container mt-3">
+				<view class="grid-cell">
+					<text class="field-label">计费周期</text>
+					<picker mode="selector" :range="strategies" @change="onStrategyChange" class="picker-full">
+						<view class="input-box picker-layout">
+							<text class="input-val text-dark">{{ strategyName }}</text>
+							<text class="icon-arrow">▼</text>
+						</view>
+					</picker>
+				</view>
+				<view class="grid-cell">
+					<text class="field-label">预计月折旧 (¥)</text>
+					<input class="input-box text-red" type="digit" v-model="form['depreciation_monthly']" placeholder="估算" />
+				</view>
+			</view>
+		</view>
+		
+		<view class="placeholder-bottom"></view>
+	</scroll-view>
+
+	<view class="fixed-footer">
+		<button class="btn-submit" :loading="loading" @click="submit">确认出租</button>
+	</view>
+</template>
+
+<script>
+	import { request } from '@/common/api.js';
+
+	export default {
+		data() {
+			return {
+				loading: false,
+				contacts: [], products: [], contactNames: [], productNames: [],
+				strategies: ['按月 (Monthly)', '按天 (Daily)'], strategyMap: ['MONTHLY', 'DAILY'],
+				currentContactName: '请选择', currentProductName: '请选择', strategyName: '按月',
+				form: { contact_id: '', product_id: '', deposit: '', rent_price: '', rent_strategy: 'MONTHLY', depreciation_monthly: '' } as any
+			}
+		},
+		onLoad() { this.loadData(); },
+		methods: {
+			async loadData() {
+				try {
+					const cRes = await request({ url: '/api/contacts/' });
+					const pRes = await request({ url: '/api/products/?status=IN_STOCK' });
+					if(cRes) { let list = (cRes as any)['results'] || cRes; this.contacts = list as any[]; this.contactNames = this.contacts.map((c: any): string => c['name']); }
+					if(pRes) { let list = (pRes as any)['results'] || pRes; this.products = list as any[]; this.productNames = this.products.map((p: any): string => p['zencode']); }
+				} catch(e) {}
+			},
+			onContactChange(e: any) { let idx = e.detail.value as number; this.form['contact_id'] = this.contacts[idx]['id']; this.currentContactName = this.contacts[idx]['name']; },
+			onProductChange(e: any) { let idx = e.detail.value as number; this.form['product_id'] = this.products[idx]['id']; this.currentProductName = this.products[idx]['zencode']; },
+			onStrategyChange(e: any) { let idx = e.detail.value as number; this.form['rent_strategy'] = this.strategyMap[idx]; this.strategyName = this.strategies[idx]; },
+			async submit() {
+				if(!this.form['contact_id'] || !this.form['product_id']) return uni.showToast({title:'请填写完整', icon:'none'});
+				if(!this.form['rent_price']) return uni.showToast({title:'请填写租金', icon:'none'});
+				this.loading = true;
+				try { await request({ url: '/api/rentals/create_lease/', method: 'POST', data: this.form }); uni.showToast({ title: '开单成功' }); setTimeout(() => { uni.navigateBack(); }, 800); } 
+				catch(e) { uni.showToast({ title: '失败', icon: 'none' }); } finally { this.loading = false; }
+			}
+		}
+	}
+</script>
+
+<style>
+	.page { padding: 30rpx; background-color: #f8fafc; height: 100%; box-sizing: border-box; }
+	
+	/* 卡片样式 */
+	.form-card { 
+		background-color: #fff; 
+		border-radius: 20rpx; 
+		padding: 30rpx; 
+		margin-bottom: 30rpx; 
+		box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.02);
+	}
+	
+	/* 标题栏 */
+	.card-header-line { 
+		display: flex; 
+		flex-direction: row; 
+		align-items: center; 
+		margin-bottom: 30rpx; 
+	}
+	.blue-bar { width: 8rpx; height: 32rpx; background-color: #2563eb; border-radius: 4rpx; margin-right: 16rpx; }
+	.purple-bar { width: 8rpx; height: 32rpx; background-color: #9333ea; border-radius: 4rpx; margin-right: 16rpx; }
+	.header-text { font-size: 32rpx; font-weight: bold; color: #1e293b; }
+	
+	/* ⚠️ 核心布局：Grid Container */
+	.grid-container {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		width: 100%;
+	}
+	
+	/* ⚠️ 核心布局：Grid Cell (强制48%宽度) */
+	.grid-cell {
+		width: 48%; /* 两个并排 */
+		display: flex;
+		flex-direction: column;
+	}
+	
+	.mt-3 { margin-top: 30rpx; }
+	
+	/* 标签 */
+	.field-label { 
+		font-size: 26rpx; 
+		font-weight: bold; 
+		color: #64748b; 
+		margin-bottom: 12rpx; 
+		display: block;
+	}
+	.req { color: #ef4444; margin-left: 4rpx; }
+	
+	/* ⚠️ 输入框方块样式 (加边框) */
+	.input-box {
+		width: 100%;
+		height: 100rpx;
+		background-color: #f8fafc;
+		border: 2rpx solid #e2e8f0; /* 关键：加上边框 */
+		border-radius: 16rpx;
+		padding: 0 20rpx;
+		font-size: 30rpx;
+		color: #333;
+		box-sizing: border-box; /* 确保 padding 不撑大 */
+	}
+	
+	/* Picker 内部布局 */
+	.picker-full { width: 100%; }
+	.picker-layout {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+	}
+	
+	.input-val { flex: 1; overflow: hidden; text-overflow: ellipsis; lines: 1; }
+	.text-dark { color: #333; }
+	.text-light { color: #94a3b8; }
+	.icon-arrow { font-size: 24rpx; color: #cbd5e1; margin-left: 10rpx; }
+	
+	/* 特殊文字 */
+	.font-bold { font-weight: bold; }
+	.text-purple { color: #9333ea; }
+	.text-red { color: #ef4444; }
+	
+	/* 底部 */
+	.placeholder-bottom { height: 180rpx; }
+	.fixed-footer {
+		position: fixed; bottom: 0; left: 0; right: 0;
+		background-color: #fff;
+		padding: 20rpx 30rpx 60rpx 30rpx; /* 适配 iPhone X */
+		box-shadow: 0 -4rpx 20rpx rgba(0,0,0,0.05);
+		z-index: 100;
+	}
+	.btn-submit {
+		background-color: #9333ea; color: #fff;
+		height: 100rpx; line-height: 100rpx;
+		border-radius: 20rpx; font-size: 34rpx; font-weight: bold;
+		border: none; width: 100%;
+	}
+	.btn-submit:active { opacity: 0.9; }
+</style>
